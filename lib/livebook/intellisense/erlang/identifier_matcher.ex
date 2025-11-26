@@ -10,7 +10,6 @@ defmodule Livebook.Intellisense.Erlang.IdentifierMatcher do
   # which is a very extensive implementation used in the Elixir Language
   # Server.
 
-  alias GenLSP.Structures.LinkedEditingRangeRegistrationOptions
   alias Livebook.Intellisense
   alias Livebook.Intellisense.Elixir.Docs
 
