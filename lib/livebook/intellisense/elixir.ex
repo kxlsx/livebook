@@ -41,15 +41,15 @@ defmodule Livebook.Intellisense.Elixir do
 
   defp handle_completion(hint, context, node) do
     Intellisense.Elixir.IdentifierMatcher.completion_identifiers(hint, context, node)
-    |> format_completion_identifiers(hint)
+    |> format_completion_identifiers(extra_completion_items(hint))
   end
 
-  def format_completion_identifiers(completions, hint) do
+  def format_completion_identifiers(completions, extra \\ []) do
     items =
       completions
       |> Enum.filter(&include_in_completion?/1)
       |> Enum.map(&format_completion_item/1)
-      |> Enum.concat(extra_completion_items(hint))
+      |> Enum.concat(extra)
       |> Enum.sort_by(&completion_item_priority/1)
 
     %{items: items}

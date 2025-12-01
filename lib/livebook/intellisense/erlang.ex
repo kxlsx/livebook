@@ -24,7 +24,7 @@ defmodule Livebook.Intellisense.Erlang do
 
   defp handle_completion(hint, context, node) do
     Erlang.IdentifierMatcher.completion_identifiers(hint, context, node)
-    |> Intellisense.Elixir.format_completion_identifiers(hint)
+    |> Intellisense.Elixir.format_completion_identifiers()
   end
 
   defp handle_details(_line, _column, _context) do
