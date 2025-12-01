@@ -40,8 +40,13 @@ defmodule Livebook.Intellisense.Elixir do
   end
 
   defp handle_completion(hint, context, node) do
+    Intellisense.Elixir.IdentifierMatcher.completion_identifiers(hint, context, node)
+    |> format_completion_identifiers(hint)
+  end
+
+  def format_completion_identifiers(completions, hint) do
     items =
-      Intellisense.Elixir.IdentifierMatcher.completion_identifiers(hint, context, node)
+      completions
       |> Enum.filter(&include_in_completion?/1)
       |> Enum.map(&format_completion_item/1)
       |> Enum.concat(extra_completion_items(hint))

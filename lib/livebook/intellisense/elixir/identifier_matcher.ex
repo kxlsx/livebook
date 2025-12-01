@@ -671,7 +671,8 @@ defmodule Livebook.Intellisense.Elixir.IdentifierMatcher do
         do: module
   end
 
-  defp match_module_function(mod, hint, ctx, funs \\ nil) do
+  # FIXME: THIS IS NOW PUBLIC - maybe move to a different module?
+  def match_module_function(mod, hint, ctx, funs \\ nil) do
     if ensure_loaded?(mod, ctx.node) do
       funs = funs || exports(mod, ctx.node)
 

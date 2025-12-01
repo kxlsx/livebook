@@ -1,5 +1,6 @@
 defmodule Livebook.Intellisense.Erlang do
   alias Livebook.Intellisense
+  alias Livebook.Intellisense.Erlang
 
   @behaviour Intellisense
 
@@ -9,8 +10,8 @@ defmodule Livebook.Intellisense.Erlang do
     nil
   end
 
-  def handle_request({:completion, hint}, context, _node) do
-    handle_completion(hint, context)
+  def handle_request({:completion, hint}, context, node) do
+    handle_completion(hint, context, node)
   end
 
   def handle_request({:details, line, column}, context, _node) do
@@ -21,9 +22,9 @@ defmodule Livebook.Intellisense.Erlang do
     handle_signature(hint, context)
   end
 
-  defp handle_completion(_hint, _context) do
-    # TODO: implement. See t:Livebook.Runtime.completion_response/0 for return type.
-    nil
+  defp handle_completion(hint, context, node) do
+    Erlang.IdentifierMatcher.completion_identifiers(hint, context, node)
+    |> Intellisense.Elixir.format_completion_identifiers(hint)
   end
 
   defp handle_details(_line, _column, _context) do
