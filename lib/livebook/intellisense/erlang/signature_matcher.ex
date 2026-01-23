@@ -54,7 +54,6 @@ defmodule Livebook.Intellisense.Erlang.SignatureMatcher do
     case :erl_scan.string(String.to_charlist(hint)) do
       {:ok, tokens, _} ->
         tokens
-        |> Enum.reverse
         |> filter_last_call
         |> Enum.concat([{:atom, 1, :__context__}, {:")", 1}, {:dot, 1}])
         |> :erl_parse.parse_exprs
@@ -63,32 +62,48 @@ defmodule Livebook.Intellisense.Erlang.SignatureMatcher do
     end
   end
 
-  defp filter_last_call(tokens) do
-    filter_last_call(tokens, :left_bracket)
-  end
-  defp filter_last_call([{:"(", 1} | tokens], :left_bracket) do
-    filter_last_call(tokens, :function_name) ++ [{:"(", 1}]
-  end
-  defp filter_last_call([{:")", 1} | tokens], :left_bracket) do
-    filter_last_call(tokens, :right_bracket) ++ [{:")", 1}]
-  end
-  defp filter_last_call([tok | tokens], :left_bracket) do
-    filter_last_call(tokens, :left_bracket) ++ [tok]
-  end
-  defp filter_last_call([{:"(", 1} | tokens], :right_bracket) do
-    filter_last_call(tokens, :left_bracket) ++ [{:"(", 1}]
-  end
-  defp filter_last_call([tok | tokens], :right_bracket) do
-    filter_last_call(tokens, :right_bracket) ++ [tok]
-  end
-  defp filter_last_call([{:atom, 1, fun}, {:":", 1}, {:atom, 1, mod} | _], :function_name) do
-    [{:atom, 1, mod}, {:":", 1}, {:atom, 1, fun}]
-  end
-  defp filter_last_call([{:atom, 1, fun} | _], :function_name) do
-    [{:atom, 1, fun}]
-  end
-  defp filter_last_call(_, _) do
+  defp filter_last_call(tokens), do:
+    tokens
+    |> Enum.reverse
+    |> filter_last_call(:strip_end)
+
+  defp filter_last_call([], _) do
     []
   end
-
+  defp filter_last_call(tokens, :strip_end) do
+    case tokens do
+      [{:"(", 1} | ttail] -> filter_last_call(ttail, :function_name) ++ [{:"(", 1}]
+      [{:",", 1} | ttail] -> filter_last_call(ttail, :args) ++ [{:",", 1}]
+      [{:")", 1} | ttail] -> filter_last_call(ttail, {:strip_brackets, 1})
+      [_ | ttail] -> filter_last_call(ttail, :strip_end)
+    end
+  end
+  defp filter_last_call(tokens, {:strip_brackets, nesting_level}) do
+    case tokens do
+      [{:"(", 1} | ttail] when nesting_level == 1 -> filter_last_call(ttail, :strip_end)
+      [{:"(", 1} | ttail] -> filter_last_call(ttail, {:strip_brackets, nesting_level - 1})
+      [{:")", 1} | ttail] -> filter_last_call(ttail, {:strip_brackets, nesting_level + 1})
+      [_ | ttail] -> filter_last_call(ttail, {:strip_brackets, nesting_level})
+    end
+  end
+  defp filter_last_call(tokens, :args) do
+    case tokens do
+      [{:"(", 1} | ttail] -> filter_last_call(ttail, :function_name) ++ [{:"(", 1}]
+      [{:")", 1} | ttail] -> filter_last_call(ttail, :args_bracket) ++ [{:")", 1}]
+      [tok | ttail] -> filter_last_call(ttail, :args) ++ [tok]
+    end
+  end
+  defp filter_last_call(tokens, :args_bracket) do
+    case tokens do
+      [{:"(", 1} | ttail] -> filter_last_call(ttail, :args) ++ [{:"(", 1}]
+      [tok | ttail] -> filter_last_call(ttail, :args_bracket) ++ [tok]
+    end
+  end
+  defp filter_last_call(tokens, :function_name) do
+    case tokens do
+      [{:atom, 1, fun}, {:":", 1}, {:atom, 1, mod} | _] -> [{:atom, 1, mod}, {:":", 1}, {:atom, 1, fun}]
+      [{:atom, 1, fun} | _] -> [{:atom, 1, fun}]
+      _ -> []
+    end
+  end
 end
