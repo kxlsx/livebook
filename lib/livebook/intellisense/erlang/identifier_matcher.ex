@@ -172,6 +172,7 @@ defmodule Livebook.Intellisense.Erlang.IdentifierMatcher do
 
       [{:atom, _, directive}, {:"-", _}, {:".", _}] -> {:pre_directive, directive}
       [{:atom, _, directive}, {:"-", _}           ] -> {:pre_directive, directive}
+      [{:"-", _}           ] -> {:pre_directive, ""}
 
       [{:atom, _, mod}, {:"-", _} | _] -> match_maybe_bitstring_mod(mod, tokens)
       [{:atom, _, mod}, {:"/", _} | _] -> match_maybe_bitstring_mod(mod, tokens)
@@ -187,7 +188,7 @@ defmodule Livebook.Intellisense.Erlang.IdentifierMatcher do
 
   defp match_module_attribute(directive, ctx) do
     for {attribute, info, array_needed}  <- @reserved_attributes,
-        ctx.matcher.(Atom.to_string(attribute), Atom.to_string(directive)),
+        directive == "" or ctx.matcher.(Atom.to_string(attribute), Atom.to_string(directive)),
         do: %{
           kind: :module_attribute,
           name: attribute,

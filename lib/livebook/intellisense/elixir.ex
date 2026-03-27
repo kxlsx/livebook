@@ -213,7 +213,7 @@ defmodule Livebook.Intellisense.Elixir do
   }),
   do: %{
     label: Atom.to_string(name),
-    kind: :variable,
+    kind: :module_attribute,
     documentation:
       join_with_newlines([
         Intellisense.Elixir.Docs.format_documentation(documentation, :short),
@@ -235,7 +235,7 @@ defmodule Livebook.Intellisense.Elixir do
        }),
        do: %{
          label: Atom.to_string(name),
-         kind: :variable,
+         kind: :module_attribute,
          documentation:
            join_with_newlines([
              Intellisense.Elixir.Docs.format_documentation(documentation, :short),
@@ -339,6 +339,7 @@ defmodule Livebook.Intellisense.Elixir do
     :interface,
     :function,
     :type,
+    :module_attribute,
     :bitstring_option
   ]
 
